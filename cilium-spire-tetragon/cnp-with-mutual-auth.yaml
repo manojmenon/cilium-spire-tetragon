@@ -1,0 +1,22 @@
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: mutual-auth-tiefighter
+spec:
+  endpointSelector:
+    matchLabels:
+      app: tiefighter
+  ingress:
+  - fromEndpoints:
+    - matchLabels:
+        app: tiefighter
+    authentication:
+      mode: "required"
+    toPorts:
+    - ports:
+      - port: "80"
+        protocol: TCP
+      rules:
+        http:
+        - method: "GET"
+          path: "/request-landing"

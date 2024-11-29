@@ -1,0 +1,8 @@
+services:
+    fed30:
+        image: manojmenon/fed30:0.0.1
+        restart: always
+        ports:
+          - '3901:22'
+        volumes:
+          - ./data/manojmenon/:/home/manojmenon

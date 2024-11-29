@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod-worker
+  labels:
+    name: pod-worker
+spec:
+  nodeName: cilium-cluster-01-worker
+  containers:
+  - name: netshoot
+    image: nicolaka/netshoot:latest
+    command: ["sleep", "infinite"]
+    resources:
+      limits:
+        memory: "128Mi"
+        cpu: "500m"
+    

@@ -1,0 +1,24 @@
+apiVersion: kind.x-k8s.io/v1alpha4
+kind: Cluster
+name: cilium-cluster-01
+nodes:
+- role: control-plane
+  extraMounts:
+      - hostPath: ./sharedstorage
+        containerPath: /var/localpath-provisioner
+- role: worker
+  extraMounts:
+      - hostPath: ./sharedstorage
+        containerPath: /var/localpath-provisioner
+- role: worker
+  extraMounts:
+      - hostPath: ./sharedstorage
+        containerPath: /var/localpath-provisioner
+# - role: worker
+#   extraMounts:
+#       - hostPath: ./sharedstorage
+#         containerPath: /var/localpath-provisioner
+networking:
+  disableDefaultCNI: true
+  ipFamily: dual
+  apiServerAddress: 127.0.0.1

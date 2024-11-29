@@ -1,0 +1,8 @@
+services:
+    ${DIR_NAME}:
+        image: ${DOCKER_NAME}/${DIR_NAME}:${TAG_NAME}
+        restart: always
+        ports:
+          - '${EXPOSE_PORT}:22'
+        volumes:
+          - ./data/manojmenon/:/home/manojmenon

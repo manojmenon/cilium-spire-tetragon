@@ -1,0 +1,8 @@
+services:
+    ub2204:
+        image: manojmenon/ub2204:0.0.1
+        restart: always
+        ports:
+          - '2204:22'
+        volumes:
+          - ./data/manojmenon/:/home/manojmenon

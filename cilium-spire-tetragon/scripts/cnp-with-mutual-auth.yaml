@@ -1,0 +1,22 @@
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: mutual-auth-deathstar
+spec:
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/name: deathstar
+  ingress:
+  - fromEndpoints:
+    - matchLabels:
+        app: tiefighter
+    authentication:
+      mode: "required"
+    toPorts:
+    - ports:
+      - port: "80"
+        protocol: TCP
+      rules:
+        http:
+        - method: "POST"
+          path: "/v1/request-landing"

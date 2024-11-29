@@ -1,0 +1,105 @@
+#!/bin/bash
+
+# -------------------------------------------------------------------
+# Script to validate argument, build Docker image, and deploy using Docker Compose.
+# -------------------------------------------------------------------
+
+# Ensure the script exits immediately if any command fails
+set -e
+
+# ---------------------------------------------------
+# Argument validation: Ensure exactly one argument is passed
+# ---------------------------------------------------
+if [ "$#" -ne 1 ]; then
+  echo "Error: Exactly one argument (tag) is required."
+  echo "Usage: $0 <tag>"
+  exit 1
+fi
+
+# Validate if the argument contains only alphabets, numbers, or dots.
+if [[ "$1" =~ ^[a-zA-Z0-9.]+$ ]]; then
+  echo "Valid argument: $1"
+else
+  echo "Error: Argument must contain only alphabets, numbers, or dots."
+  exit 1
+fi
+
+# ---------------------------------------------------------
+# Prepare environment variables and load configuration
+# ---------------------------------------------------------
+# Store the current working directory for reference
+
+cd "${PWD}"
+
+CURRENT_DIR="${PWD}"
+
+# Load environment variables from .env file, if it exists
+if [ -f .env ]; then
+  source .env
+else
+  echo "Fatal: .env file not found. the PORT variable should be number betweeb 2049 and 30000"
+  exit 0
+fi
+
+# -----------------------------------------
+# Check if PORT is set and within range 2049-30000
+# -----------------------------------------
+if [ -z "$EXPOSE_PORT" ]; then
+  echo "Error: EXPOSE_PORT is not defined in the .env file."
+  exit 1
+elif ! [[ "$EXPOSE_PORT" =~ ^[0-9]+$ ]]; then
+  echo "Error: EXPOSE_PORT must be a number. Current value is ${EXPOSE_PORT}"
+  exit 1
+elif [ "$EXPOSE_PORT" -lt 2049 ] || [ "$EXPOSE_PORT" -gt 30000 ]; then
+  echo "Error: EXPOSE_PORT must be between 2048 and 30000. Current value is ${EXPOSE_PORT}"
+  exit 1
+else
+  echo "EXPOSE_PORT is valid: $EXPOSE_PORT"
+fi
+
+
+# Set environment variables
+export TAG_NAME="$1"
+export DOCKER_NAME="manojmenon"
+export DIR_NAME=$(basename "${CURRENT_DIR}")
+MAKE_DIR=$(which make-docker)
+
+# Get the directory of 'make-docker'
+YMLT_DIR=$(dirname "$MAKE_DIR")
+
+# ----------------------------------------
+# Docker operations: Stop, build, and push
+# ----------------------------------------
+# Stop any running containers with the same name
+echo "Stopping existing Docker container..."
+docker stop "${DIR_NAME}-${DIR_NAME}-1" &
+
+# Build the Docker image
+echo "Building Docker image..."
+docker build -t "${DOCKER_NAME}/${DIR_NAME}:${TAG_NAME}" .
+
+# Push the Docker image to the repository
+echo "Pushing Docker image..."
+docker push "${DOCKER_NAME}/${DIR_NAME}:${TAG_NAME}"
+
+# Wait for the background tasks to complete
+wait
+
+# ------------------------------------------
+# Docker Compose: Prepare and start services
+# ------------------------------------------
+echo "Generating docker-compose.yml from template..."
+envsubst < "${YMLT_DIR}/docker-compose.ymlt" > docker-compose.yaml
+
+# Start the Docker services using Docker Compose
+echo "Starting Docker Compose services..."
+docker compose up -d --remove-orphans
+
+# ------------------------------------------
+# Exec into the running container
+# ------------------------------------------
+echo "Accessing the running container..."
+docker exec -it "${DIR_NAME}-${DIR_NAME}-1" /bin/bash
+
+
+### End of Program

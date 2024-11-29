@@ -1,0 +1,139 @@
+#!/bin/bash
+
+# -------------------------------------------------------------------
+# Script to validate argument, build Docker image, and deploy using Docker Compose.
+# -------------------------------------------------------------------
+
+# Ensure the script exits immediately if any command fails
+set -e
+
+# ---------------------------------------------------
+# Function to validate the argument
+# ---------------------------------------------------
+validate_argument() {
+  if [ "$#" -ne 1 ]; then
+    echo "Error: Exactly one argument (tag) is required."
+    echo "Usage: $0 <tag>"
+    exit 1
+  fi
+
+  # Validate if the argument contains only alphabets, numbers, or dots.
+  if [[ "$1" =~ ^[a-zA-Z0-9.]+$ ]]; then
+    echo "Valid argument: $1"
+  else
+    echo "Error: Argument must contain only alphabets, numbers, or dots."
+    exit 1
+  fi
+}
+
+# ---------------------------------------------------
+# Function to load environment variables
+# ---------------------------------------------------
+load_env() {
+  if [ -f .env ]; then
+    source .env
+  else
+    echo "Fatal: .env file not found. Please create file .env in current directory and add a line 'export EXPOSE_PORT=<number>' between 2049 and 30000"
+  exit 0
+  fi
+}
+
+# ---------------------------------------------------
+# Function to check PORT validity
+# ---------------------------------------------------
+check_port() {
+
+# -----------------------------------------
+# Check if PORT is set and within range 2049-30000
+# -----------------------------------------
+if [ -z "$EXPOSE_PORT" ]; then
+  echo "Error: EXPOSE_PORT is not defined in the .env file."
+  exit 1
+elif ! [[ "$EXPOSE_PORT" =~ ^[0-9]+$ ]]; then
+  echo "Error: EXPOSE_PORT must be a number. Current value is ${EXPOSE_PORT}"
+  exit 1
+elif [ "$EXPOSE_PORT" -lt 2049 ] || [ "$EXPOSE_PORT" -gt 30000 ]; then
+  echo "Error: EXPOSE_PORT must be between 2048 and 30000. Current value is ${EXPOSE_PORT}"
+  exit 1
+else
+  echo "EXPOSE_PORT is valid: $EXPOSE_PORT"
+fi
+}
+
+# ---------------------------------------------------
+# Function to prepare environment variables
+# ---------------------------------------------------
+prepare_variables() {
+  CURRENT_DIR="${PWD}"
+  export TAG_NAME="$1"
+  export DOCKER_NAME="manojmenon"
+  export DIR_NAME=$(basename "${CURRENT_DIR}")
+  MAKE_DIR=$(which make-docker)
+
+    # Get the directory of 'make-docker'
+  export YMLT_DIR=$(dirname "$MAKE_DIR")
+}
+
+# ---------------------------------------------------
+# Function to build and push Docker image
+# ---------------------------------------------------
+build_and_push_docker_image() {
+  # Stop any running containers with the same name
+  echo "Stopping existing Docker container..."
+  docker stop "${DIR_NAME}-${DIR_NAME}-1" &
+
+  # Build the Docker image
+  echo "Building Docker image..."
+  docker build -t "${DOCKER_NAME}/${DIR_NAME}:${TAG_NAME}" .
+
+  # Push the Docker image to the repository
+  echo "Pushing Docker image..."
+  docker push "${DOCKER_NAME}/${DIR_NAME}:${TAG_NAME}"
+
+  # Wait for the background tasks to complete
+  wait
+}
+
+# ---------------------------------------------------
+# Function to prepare docker-compose.yaml
+# ---------------------------------------------------
+prepare_docker_compose() {
+  echo "Generating docker-compose.yml from template..."
+  envsubst < "${YMLT_DIR}/docker-compose.ymlt" > docker-compose.yaml
+}
+
+# ---------------------------------------------------
+# Function to start Docker Compose services
+# ---------------------------------------------------
+start_docker_compose() {
+  echo "Starting Docker Compose services..."
+  docker compose up -d --remove-orphans
+}
+
+# ---------------------------------------------------
+# Function to access the running container
+# ---------------------------------------------------
+access_container() {
+  echo "Accessing the running container..."
+  docker exec -it "${DIR_NAME}-${DIR_NAME}-1" /bin/bash
+}
+
+# ---------------------------------------------------
+# Main script execution
+# ---------------------------------------------------
+main() {
+  validate_argument "$1"
+  load_env
+  check_port
+  prepare_variables "$1"
+  build_and_push_docker_image
+  prepare_docker_compose
+  start_docker_compose
+  access_container
+}
+
+# ---------------------------------------------------
+# Run the main function
+# ---------------------------------------------------
+cd "${PWD}"
+main "$1"
