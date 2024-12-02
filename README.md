@@ -199,7 +199,7 @@ After the environment has been setup, you can use kubectl for interfacing with t
 
 Spire is automatically installed in the cilium-spire namespace.
 
-Checkout the instructions - the mTLS handshake is onlt done one !!
+Checkout the instructions - the mTLS handshake is only done once !!
 
 ### To Teardown
 
