@@ -49,7 +49,7 @@ data:
     # Protocol (http, https, socket)
     protocol = http
     # The http port to use
-    http_port = 3000
+    http_port = 3005
     # enable gzip
     enable_gzip = false
     #################################### Session #############################
@@ -14211,9 +14211,9 @@ metadata:
   namespace: cilium-monitoring
 spec:
   ports:
-    - port: 3000
+    - port: 3005
       protocol: TCP
-      targetPort: 3000
+      targetPort: 3005
   selector:
     app: grafana
   type: ClusterIP
@@ -14268,7 +14268,7 @@ spec:
             failureThreshold: 3
             httpGet:
               path: /login
-              port: 3000
+              port: 3005
               scheme: HTTP
           volumeMounts:
             - mountPath: /configmap/grafana

@@ -134,7 +134,7 @@ fn_install_grafana_prometheus()
     
     sleep 5
     
-    kubectl -n cilium-monitoring port-forward service/grafana --address 0.0.0.0 --address :: ${GRAFANA_PORT}:3000 > ../grafana/logs/grafana.log 2>&1 &
+    kubectl -n cilium-monitoring port-forward service/grafana --address 0.0.0.0 --address :: ${GRAFANA_PORT}:${Grafana} > ../grafana/logs/grafana.log 2>&1 &
     kubectl -n cilium-monitoring port-forward service/prometheus --address 0.0.0.0 --address :: ${PROMETHEUS_PORT}:9090 > ../grafana/logs/prometheus.log 2>&1 &
    
 
@@ -670,7 +670,7 @@ echo " "
 
 echo "  C.To Access Dashboards on the browser "
 echo " "
-echo "     1. Grafana     : https://localhost:${GRAFANA_PORT} (https)"
+echo "     1. Grafana     : http://localhost:${GRAFANA_PORT} (http)"
 echo "     2. Prometheus  : http://localhost:${PROMETHEUS_PORT} (http)"
 echo "     3. Kubernets   : https://localhost:${DASHBOARD_PORT} (change namespace from 'default' to '${NAME_SPACE}' at the top left corner dropdown window)"
 echo " "
@@ -682,7 +682,7 @@ echo "    NOTE You may need to open additional terminals or browser session(s)"
 echo " "
 echo "     if any of the Browsers dont come up you can also try the following to open ports"
 echo " "
-echo "    kubectl -n cilium-monitoring port-forward service/grafana --address 0.0.0.0 --address :: ${GRAFANA_PORT}:3000 & "
+echo "    kubectl -n cilium-monitoring port-forward service/grafana --address 0.0.0.0 --address :: ${GRAFANA_PORT}:${GRAFANA_PORT} & "
 echo "    kubectl -n cilium-monitoring port-forward service/prometheus --address 0.0.0.0 --address :: ${PROMETHEUS_PORT}:9090 &"
 echo "    kubectl port-forward -n kubernetes-dashboard svc/kubernetes-dashboard --address 0.0.0.0 ${DASHBOARD_PORT}:443  &"
 echo " "
@@ -694,12 +694,14 @@ echo " "
 PROGRAM=$0
 export NAME_SPACE=${NAME_SPACE:-"self-test"}
 PRE_REQUISITES_MET=1
-GRAFANA_PORT=${GRAFANA_PORT:-"3000"}
+GRAFANA_PORT=${GRAFANA_PORT:-"3005"}
 PROMETHEUS_PORT=${PROMETHEUS_PORT:-"9090"}
 DASHBOARD_PORT=${DASHBOARD_PORT:-"1244"}
 
 ADMIN_TOKEN=""
 
+fn_close_program
+exit 0
 
 fn_check_pre_requisites
 
