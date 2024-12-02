@@ -342,7 +342,7 @@ echo "Deleted and recreated namespace ${NAME_SPACE}."
 #kubectl delete -f ../cilium/yamls/00-namespace.yaml
 #kubectl apply -f ../cilium/yamls/00-namespace.yaml
     
-# kubectl -n ${NAME_SPACE}   apply -f ../cilium/yamls
+kubectl -n ${NAME_SPACE}   apply -f ../cilium/echo-kube-ipv6.yaml -f ../cilium/yamls/pod1.yaml -f ../cilium/yamls/pod2.yaml
 
 # echo "Installing echoserver.."
 # kubectl -n ${NAME_SPACE}   rollout status deployment echoserver
@@ -668,7 +668,23 @@ echo "    kubectl -n ${NAME_SPACE}   exec -ti xwing -- bash -c 'cat /etc/shadow'
 echo "    kubectl -n ${NAME_SPACE}   exec -ti xwing -- /bin/bash "
 echo " "
 
-echo "  C.To Access Dashboards on the browser "
+
+echo "  C.To Test Spire Components "
+echo " "
+kubectl exec -n cilium-spire spire-server-0 -c spire-server -- /opt/spire/bin/spire-server healthcheck
+kubectl exec -n cilium-spire spire-server-0 -c spire-server -- /opt/spire/bin/spire-server agent list
+kubectl exec -n cilium-spire spire-server-0 -c spire-server -- /opt/spire/bin/spire-server entry show -parentID spiffe://spiffe.cilium/ns/cilium-spire/sa/spire-agent
+IDENTITY_ID=$(kubectl -n ${NAME_SPACE} get cep -l class=deathstar -o=jsonpath='{.items[0].status.identity.id}')
+kubectl exec -n cilium-spire spire-server-0 -c spire-server -- /opt/spire/bin/spire-server entry show -spiffeID spiffe://spiffe.cilium/identity/$IDENTITY_ID
+echo "   In a separate window run hubble observe -n ${NAME_SPACE} -f to observe events"
+kubectl -n "${NAME_SPACE}" create -f ../cilium/yamls/cnp-with-mutual-auth.yaml > /dev/null 2>&1
+echo " "
+echo "   kubectl -n ${NAME_SPACE}   exec -ti tiefighter -- bash -c 'curl -s -XPOST deathstar.`echo ${NAME_SPACE}`.svc.cluster.local/v1/request-landing' "
+echo " "
+echo "   Now you can see the first packet is dropped and  with mTLS succesfully reconnected"
+echo " "
+
+echo "  D.To Access Dashboards on the browser "
 echo " "
 echo "     1. Grafana     : http://localhost:${GRAFANA_PORT} (http)"
 echo "     2. Prometheus  : http://localhost:${PROMETHEUS_PORT} (http)"
@@ -700,8 +716,8 @@ DASHBOARD_PORT=${DASHBOARD_PORT:-"1244"}
 
 ADMIN_TOKEN=""
 
-fn_close_program
-exit 0
+# fn_close_program
+# exit 0
 
 fn_check_pre_requisites
 

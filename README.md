@@ -199,8 +199,7 @@ After the environment has been setup, you can use kubectl for interfacing with t
 
 Spire is automatically installed in the cilium-spire namespace.
 
-- ⚠️  Not all Tests are currently working now.
-
+Checkout the instructions - the mTLS handshake is onlt done one !!
 
 ### To Teardown
 
@@ -235,8 +234,7 @@ Spire is in the K8S Cluster and gets deleted when the cluster gets deleted. It r
 
 ## ToDo
 
-- Spire Integration (Checks)
-- Policy Enforcement Checks
+
 - Cluster Mesh
 
 
